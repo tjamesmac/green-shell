@@ -1,8 +1,4 @@
-use std::{
-    collections::HashMap,
-    io::Write,
-    process::{self},
-};
+use std::{collections::HashMap, io::Write};
 
 struct BUILTINS {
     commands: HashMap<String, fn(Vec<String>) -> bool>,
