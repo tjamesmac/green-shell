@@ -1,15 +1,16 @@
 use std::{
     collections::HashMap,
+    io::Write,
     process::{self},
 };
 
 struct BUILTINS {
-    commands: HashMap<String, fn(Vec<String>)>,
+    commands: HashMap<String, fn(Vec<String>) -> bool>,
 }
 
 impl BUILTINS {
     fn new() -> BUILTINS {
-        let mut commands: HashMap<String, fn(Vec<String>)> = HashMap::new();
+        let mut commands: HashMap<String, fn(Vec<String>) -> bool> = HashMap::new();
 
         commands.insert(String::from("exit"), builtin_exit);
         commands.insert(String::from("help"), builtin_help);
@@ -18,13 +19,15 @@ impl BUILTINS {
     }
 }
 
-fn builtin_exit(_args: Vec<String>) {
+fn builtin_exit(_args: Vec<String>) -> bool {
     println!("Goodbye! :)");
-    process::exit(0)
+    return false;
 }
 
-fn builtin_help(_args: Vec<String>) {
-    println!("Help!")
+fn builtin_help(_args: Vec<String>) -> bool {
+    println!("Help!");
+
+    return true;
 }
 
 struct Shell {
@@ -39,7 +42,7 @@ impl Shell {
     }
 
     fn run(&self) {
-        println!("Running shell");
+        println!("Welcome to green-shell");
         loop {
             self.prompt();
             let line = self.read_line();
@@ -47,21 +50,20 @@ impl Shell {
             let status = self.execute(args);
             println!("What is my status: {}", status);
             if !status {
-                println!("Exiting shell...");
+                println!("Exiting green-shell...");
                 break;
             }
         }
     }
 
     fn prompt(&self) {
-        println!("> ")
+        print!("> ");
+        std::io::stdout().flush().unwrap()
     }
 
     fn read_line(&self) -> String {
-        println!("reading line");
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        println!("You entered: {}", input);
         input
     }
 
@@ -81,12 +83,11 @@ impl Shell {
         false
     }
 
-    fn check_for_builtins(&self, args: Vec<String>) {
-        for (key, value) in self.builtins.commands.iter() {
-            if args[0].trim() == key.to_string().trim() {
-                value(args.clone())
-            }
-        }
+    fn check_for_builtins(&self, arg: String) -> Option<(&String, &fn(Vec<String>) -> bool)> {
+        self.builtins
+            .commands
+            .iter()
+            .find(|x| arg.trim() == x.0.to_string().trim())
     }
 
     fn execute(&self, args: Vec<String>) -> bool {
@@ -94,13 +95,13 @@ impl Shell {
             return true;
         }
 
-        // check for builtin commands
-        self.check_for_builtins(args);
-        //
-        // save_history
+        let has_builtin = self.check_for_builtins(args[0].clone());
 
-        // idk i think this needs to be something else
-        return self.launch() || true;
+        // implement save_history
+        match has_builtin {
+            Some(built) => built.1(args),
+            None => self.launch() || true,
+        }
     }
 }
 
