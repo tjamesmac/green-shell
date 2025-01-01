@@ -1,4 +1,8 @@
-use std::{collections::HashMap, io::Write};
+use std::{
+    collections::HashMap,
+    io::{self, Write},
+    process::Command,
+};
 
 struct BUILTINS {
     commands: HashMap<String, fn(Vec<String>) -> bool>,
@@ -10,6 +14,7 @@ impl BUILTINS {
 
         commands.insert(String::from("exit"), builtin_exit);
         commands.insert(String::from("help"), builtin_help);
+        commands.insert(String::from("ls"), builtin_ls);
 
         BUILTINS { commands }
     }
@@ -22,6 +27,20 @@ fn builtin_exit(_args: Vec<String>) -> bool {
 
 fn builtin_help(_args: Vec<String>) -> bool {
     println!("Help!");
+
+    return true;
+}
+
+fn builtin_ls(_args: Vec<String>) -> bool {
+    if let Some((first, rest)) = _args.split_first() {
+        let output = Command::new(first)
+            .args(rest)
+            .output()
+            .expect("failed to execute process");
+
+        io::stdout().write_all(&output.stdout).unwrap();
+        io::stderr().write_all(&output.stderr).unwrap();
+    }
 
     return true;
 }
@@ -44,7 +63,6 @@ impl Shell {
             let line = self.read_line();
             let args = self.split_line(line);
             let status = self.execute(args);
-            println!("What is my status: {}", status);
             if !status {
                 println!("Exiting green-shell...");
                 break;
@@ -60,13 +78,11 @@ impl Shell {
     fn read_line(&self) -> String {
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).unwrap();
-        input
+        input.trim().to_string()
     }
 
     fn split_line(&self, line: String) -> Vec<String> {
-        let line_to_split = line.trim();
-
-        if line_to_split.is_empty() {
+        if line.is_empty() {
             return Vec::new();
         }
 
@@ -102,6 +118,5 @@ impl Shell {
 }
 
 fn main() {
-    println!("Hello, world!");
     Shell::new().run();
 }
