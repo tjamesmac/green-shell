@@ -15,7 +15,6 @@ impl BUILTINS {
 
         commands.insert(String::from("exit"), builtin_exit);
         commands.insert(String::from("help"), builtin_help);
-        commands.insert(String::from("ls"), builtin_ls);
 
         BUILTINS { commands }
     }
@@ -28,22 +27,6 @@ fn builtin_exit(_args: Vec<String>) -> bool {
 
 fn builtin_help(_args: Vec<String>) -> bool {
     println!("Help!");
-
-    return true;
-}
-
-fn builtin_ls(args: Vec<String>) -> bool {
-    if let Some((first, rest)) = args.split_first() {
-        let output = Command::new(first)
-            .args(rest)
-            .output()
-            .expect(format!("failed to execute process - {}", first).as_str());
-
-        io::stdout().write_all(&output.stdout).unwrap();
-        io::stderr().write_all(&output.stderr).unwrap();
-    } else {
-        return false;
-    }
 
     return true;
 }
