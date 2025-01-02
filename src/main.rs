@@ -1,10 +1,12 @@
 use std::{
     collections::HashMap,
     env::{self},
-    io::{self, Write},
+    io::Write,
     path::Path,
-    process::Command,
+    process::{Command, Stdio},
 };
+
+use termcolor::{ColorChoice, StandardStream};
 
 enum ShellStatus {
     Running,
@@ -117,19 +119,24 @@ impl Shell {
     }
 
     fn launch(&self, command: &str, args: &[String]) -> ShellStatus {
-        let output = Command::new(command).args(args).output();
+        let result = Command::new(command)
+            .args(args)
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status();
 
-        match output {
-            Ok(output) => {
-                io::stdout().write_all(&output.stdout).unwrap();
-                io::stdout().write_all(&output.stderr).unwrap();
+        match result {
+            Ok(status) if status.success() => ShellStatus::Running,
+            Ok(status) => {
+                eprintln!("failed to execute process - {}: {}", command, status);
+                ShellStatus::Running
             }
             Err(err) => {
                 eprintln!("failed to execute process - {}: {}", command, err);
+                ShellStatus::Running
             }
         }
-
-        ShellStatus::Running
     }
 
     fn check_for_builtins(&self, arg: &str) -> Option<fn(Vec<String>) -> ShellStatus> {
