@@ -88,11 +88,7 @@ impl Shell {
     }
 
     fn split_line(&self, line: String) -> Vec<String> {
-        if line.is_empty() {
-            return Vec::new();
-        }
-
-        line.split(" ").map(str::to_string).collect()
+        line.split_whitespace().map(str::to_string).collect()
     }
 
     fn launch(&self, args: Vec<String>) -> bool {
