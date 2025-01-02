@@ -107,11 +107,8 @@ impl Shell {
         true
     }
 
-    fn check_for_builtins(&self, arg: String) -> Option<(&String, &fn(Vec<String>) -> bool)> {
-        self.builtins
-            .commands
-            .iter()
-            .find(|x| arg.trim() == x.0.to_string().trim())
+    fn check_for_builtins(&self, arg: &str) -> Option<fn(Vec<String>) -> bool> {
+        self.builtins.commands.get(arg).copied()
     }
 
     fn execute(&self, args: Vec<String>) -> bool {
@@ -119,12 +116,12 @@ impl Shell {
             return true;
         }
 
-        let has_builtin = self.check_for_builtins(args[0].clone());
-
         // implement save_history
-        match has_builtin {
-            Some(built) => built.1(args),
-            None => self.launch(args) || true,
+        if let Some(builtin) = self.check_for_builtins(&args[0]) {
+            builtin(args)
+        } else {
+            let (command, args) = args.split_first().unwrap();
+            self.launch(command, args)
         }
     }
 }
