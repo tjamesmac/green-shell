@@ -6,13 +6,18 @@ use std::{
     process::Command,
 };
 
+enum ShellStatus {
+    Running,
+    Exit,
+}
+
 struct Builtins {
-    commands: HashMap<String, fn(Vec<String>) -> bool>,
+    commands: HashMap<String, fn(Vec<String>) -> ShellStatus>,
 }
 
 impl Builtins {
     fn new() -> Self {
-        let mut commands: HashMap<String, fn(Vec<String>) -> bool> = HashMap::new();
+        let mut commands: HashMap<String, fn(Vec<String>) -> ShellStatus> = HashMap::new();
 
         commands.insert(String::from("exit"), builtin_exit);
         commands.insert(String::from("help"), builtin_help);
@@ -22,25 +27,28 @@ impl Builtins {
     }
 }
 
-fn builtin_cd(args: Vec<String>) -> bool {
-    let (_command, destination_path) = args.split_first().unwrap();
+fn builtin_cd(args: Vec<String>) -> ShellStatus {
+    if args.len() < 2 {
+        eprintln!("TODO: implement cd without destination to go back to $HOME")
+    } else {
+        let (_command, destination_path) = args.split_first().unwrap();
 
-    let destination = &destination_path[0];
+        let destination = &destination_path[0];
 
-    assert!(env::set_current_dir(Path::new(destination)).is_ok());
-
-    true
+        assert!(env::set_current_dir(Path::new(destination)).is_ok());
+    }
+    ShellStatus::Running
 }
 
-fn builtin_exit(_args: Vec<String>) -> bool {
+fn builtin_exit(_args: Vec<String>) -> ShellStatus {
     println!("Goodbye! :)");
-    false
+    ShellStatus::Exit
 }
 
-fn builtin_help(_args: Vec<String>) -> bool {
+fn builtin_help(_args: Vec<String>) -> ShellStatus {
     println!("Help!");
 
-    true
+    ShellStatus::Running
 }
 
 struct Shell {
@@ -56,17 +64,16 @@ impl Shell {
 
     fn run(&self) {
         println!("Welcome to green-shell");
-        loop {
+
+        let mut status = ShellStatus::Running;
+        while let ShellStatus::Running = status {
             self.prompt();
             let line = self.read_line();
             let args = self.split_line(line);
-            let status = self.execute(args);
-            if !status {
-                println!("Exiting green-shell...");
-                break;
-            }
+            status = self.execute(args);
             println!("")
         }
+        println!("Exiting green-shell...");
     }
 
     fn get_current_working_directory(&self) -> std::io::Result<String> {
@@ -96,7 +103,7 @@ impl Shell {
         line.split_whitespace().map(str::to_string).collect()
     }
 
-    fn launch(&self, command: &str, args: &[String]) -> bool {
+    fn launch(&self, command: &str, args: &[String]) -> ShellStatus {
         let output = Command::new(command).args(args).output();
 
         match output {
@@ -109,16 +116,16 @@ impl Shell {
             }
         }
 
-        true
+        ShellStatus::Running
     }
 
-    fn check_for_builtins(&self, arg: &str) -> Option<fn(Vec<String>) -> bool> {
+    fn check_for_builtins(&self, arg: &str) -> Option<fn(Vec<String>) -> ShellStatus> {
         self.builtins.commands.get(arg).copied()
     }
 
-    fn execute(&self, args: Vec<String>) -> bool {
+    fn execute(&self, args: Vec<String>) -> ShellStatus {
         if args.is_empty() {
-            return true;
+            return ShellStatus::Running;
         }
 
         // implement save_history
