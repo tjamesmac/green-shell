@@ -85,9 +85,22 @@ impl Shell {
             })
     }
 
+    fn get_shortened_path(&self, cwd: String) -> String {
+        let home_dir = match env::var("HOME") {
+            Ok(path) => path,
+            Err(_) => return cwd.to_string(),
+        };
+
+        if cwd.starts_with(&home_dir) {
+            format!("~{}", &cwd[home_dir.len()..])
+        } else {
+            cwd.to_string()
+        }
+    }
+
     fn prompt(&self) {
         match self.get_current_working_directory() {
-            Ok(cwd) => print!("{}\n> ", cwd),
+            Ok(cwd) => print!("{}\n> ", self.get_shortened_path(cwd)),
             Err(_) => print!("> "),
         }
         std::io::stdout().flush().unwrap()
