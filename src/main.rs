@@ -5,34 +5,40 @@ use std::{
     process::Command,
 };
 
-struct BUILTINS {
+struct Builtins {
     commands: HashMap<String, fn(Vec<String>) -> bool>,
 }
 
-impl BUILTINS {
-    fn new() -> BUILTINS {
+impl Builtins {
+    fn new() -> Self {
         let mut commands: HashMap<String, fn(Vec<String>) -> bool> = HashMap::new();
 
         commands.insert(String::from("exit"), builtin_exit);
         commands.insert(String::from("help"), builtin_help);
+        commands.insert(String::from("cd"), builtin_cd);
 
-        BUILTINS { commands }
+        Self { commands }
     }
+}
+
+fn builtin_cd(_args: Vec<String>) -> bool {
+    println!("implement cd!");
+    true
 }
 
 fn builtin_exit(_args: Vec<String>) -> bool {
     println!("Goodbye! :)");
-    return false;
+    false
 }
 
 fn builtin_help(_args: Vec<String>) -> bool {
     println!("Help!");
 
-    return true;
+    true
 }
 
 struct Shell {
-    builtins: BUILTINS,
+    builtins: Builtins,
 }
 
 impl Shell {
