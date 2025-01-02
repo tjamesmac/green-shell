@@ -91,20 +91,20 @@ impl Shell {
         line.split_whitespace().map(str::to_string).collect()
     }
 
-    fn launch(&self, args: Vec<String>) -> bool {
-        if let Some((first, rest)) = args.split_first() {
-            let output = Command::new(first)
-                .args(rest)
-                .output()
-                .expect(format!("failed to execute process - {}", first).as_str());
+    fn launch(&self, command: &str, args: &[String]) -> bool {
+        let output = Command::new(command).args(args).output();
 
-            io::stdout().write_all(&output.stdout).unwrap();
-            io::stderr().write_all(&output.stderr).unwrap();
-        } else {
-            return false;
+        match output {
+            Ok(output) => {
+                io::stdout().write_all(&output.stdout).unwrap();
+                io::stdout().write_all(&output.stderr).unwrap();
+            }
+            Err(err) => {
+                eprintln!("failed to execute process - {}: {}", command, err);
+            }
         }
 
-        return true;
+        true
     }
 
     fn check_for_builtins(&self, arg: String) -> Option<(&String, &fn(Vec<String>) -> bool)> {
