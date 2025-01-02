@@ -1,7 +1,8 @@
 use std::{
     collections::HashMap,
-    env,
+    env::{self},
     io::{self, Write},
+    path::Path,
     process::Command,
 };
 
@@ -21,8 +22,13 @@ impl Builtins {
     }
 }
 
-fn builtin_cd(_args: Vec<String>) -> bool {
-    println!("implement cd!");
+fn builtin_cd(args: Vec<String>) -> bool {
+    let (_command, destination_path) = args.split_first().unwrap();
+
+    let destination = &destination_path[0];
+
+    assert!(env::set_current_dir(Path::new(destination)).is_ok());
+
     true
 }
 
