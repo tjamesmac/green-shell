@@ -31,15 +31,17 @@ fn builtin_help(_args: Vec<String>) -> bool {
     return true;
 }
 
-fn builtin_ls(_args: Vec<String>) -> bool {
-    if let Some((first, rest)) = _args.split_first() {
+fn builtin_ls(args: Vec<String>) -> bool {
+    if let Some((first, rest)) = args.split_first() {
         let output = Command::new(first)
             .args(rest)
             .output()
-            .expect("failed to execute process");
+            .expect(format!("failed to execute process - {}", first).as_str());
 
         io::stdout().write_all(&output.stdout).unwrap();
         io::stderr().write_all(&output.stderr).unwrap();
+    } else {
+        return false;
     }
 
     return true;
@@ -89,10 +91,20 @@ impl Shell {
         line.split(" ").map(str::to_string).collect()
     }
 
-    fn launch(&self) -> bool {
-        println!("Implement the launch!");
-        // temporary bool return
-        false
+    fn launch(&self, args: Vec<String>) -> bool {
+        if let Some((first, rest)) = args.split_first() {
+            let output = Command::new(first)
+                .args(rest)
+                .output()
+                .expect(format!("failed to execute process - {}", first).as_str());
+
+            io::stdout().write_all(&output.stdout).unwrap();
+            io::stderr().write_all(&output.stderr).unwrap();
+        } else {
+            return false;
+        }
+
+        return true;
     }
 
     fn check_for_builtins(&self, arg: String) -> Option<(&String, &fn(Vec<String>) -> bool)> {
@@ -112,7 +124,7 @@ impl Shell {
         // implement save_history
         match has_builtin {
             Some(built) => built.1(args),
-            None => self.launch() || true,
+            None => self.launch(args) || true,
         }
     }
 }
