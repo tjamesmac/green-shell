@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    env,
     io::{self, Write},
     process::Command,
 };
@@ -69,11 +70,25 @@ impl Shell {
                 println!("Exiting green-shell...");
                 break;
             }
+            println!("")
+        }
+    }
+
+    fn get_current_working_directory(&self) -> std::io::Result<String> {
+        match env::current_dir() {
+            Ok(path) => Ok(path.display().to_string()),
+            Err(error) => {
+                eprintln!("Error getting current directory: {}", error);
+                Err(error)
+            }
         }
     }
 
     fn prompt(&self) {
-        print!("> ");
+        match self.get_current_working_directory() {
+            Ok(cwd) => print!("{}\n> ", cwd),
+            Err(_) => print!("> "),
+        }
         std::io::stdout().flush().unwrap()
     }
 
