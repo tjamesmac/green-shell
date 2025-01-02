@@ -42,9 +42,9 @@ struct Shell {
 }
 
 impl Shell {
-    fn new() -> Shell {
-        Shell {
-            builtins: BUILTINS::new(),
+    fn new() -> Self {
+        Self {
+            builtins: Builtins::new(),
         }
     }
 
