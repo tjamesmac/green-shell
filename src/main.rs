@@ -64,13 +64,12 @@ impl Shell {
     }
 
     fn get_current_working_directory(&self) -> std::io::Result<String> {
-        match env::current_dir() {
-            Ok(path) => Ok(path.display().to_string()),
-            Err(error) => {
+        env::current_dir()
+            .map(|path| path.display().to_string())
+            .map_err(|error| {
                 eprintln!("Error getting current directory: {}", error);
-                Err(error)
-            }
-        }
+                error
+            })
     }
 
     fn prompt(&self) {
