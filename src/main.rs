@@ -81,7 +81,6 @@ fn save_history(args: &Vec<String>) -> ShellStatus {
 }
 
 fn builtin_exit(_args: Vec<String>) -> ShellStatus {
-    println!("Goodbye! :)");
     ShellStatus::Exit
 }
 
@@ -91,14 +90,31 @@ fn builtin_help(_args: Vec<String>) -> ShellStatus {
     ShellStatus::Running
 }
 
+fn split_by_whitespace(to_split: String) -> Vec<String> {
+    to_split.split_whitespace().map(str::to_string).collect()
+}
+
 struct Shell {
     builtins: Builtins,
+    aliases: HashMap<String, Vec<String>>,
 }
 
 impl Shell {
     fn new() -> Self {
+        let mut aliases = HashMap::new();
+
+        aliases.insert(
+            String::from("lg"),
+            split_by_whitespace(String::from("lazygit")),
+        );
+        aliases.insert(
+            String::from("gs"),
+            split_by_whitespace(String::from("git status -s -b")),
+        );
+
         Self {
             builtins: Builtins::new(),
+            aliases,
         }
     }
 
@@ -153,7 +169,7 @@ impl Shell {
     }
 
     fn split_line(&self, line: String) -> Vec<String> {
-        line.split_whitespace().map(str::to_string).collect()
+        split_by_whitespace(line)
     }
 
     fn launch(&self, command: &str, args: &[String]) -> ShellStatus {
@@ -191,8 +207,14 @@ impl Shell {
         if let Some(builtin) = self.check_for_builtins(&args[0]) {
             builtin(args)
         } else {
-            let (command, args) = args.split_first().unwrap();
-            self.launch(command, args)
+            let check_if_alias_args = match self.aliases.get(&args[0]) {
+                Some(alias_args) => alias_args.clone(),
+                None => args,
+            };
+
+            let (command, args) = check_if_alias_args.split_first().unwrap();
+
+            self.launch(&command, args)
         }
     }
 }
