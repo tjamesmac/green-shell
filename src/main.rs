@@ -43,9 +43,7 @@ fn builtin_cd(args: Vec<String>) -> ShellStatus {
     } else {
         let (_command, destination_path) = args.split_first().unwrap();
 
-        let destination = &destination_path[0];
-
-        assert!(env::set_current_dir(Path::new(destination)).is_ok());
+        assert!(env::set_current_dir(Path::new(&destination_path[0])).is_ok());
     }
     ShellStatus::Running
 }
