@@ -44,7 +44,6 @@ fn builtin_cd(args: Vec<String>) -> ShellStatus {
 }
 
 fn save_history(args: &Vec<String>) -> ShellStatus {
-    println!("Saving history!");
     let home_dir = match env::var("HOME") {
         Ok(path) => path,
         Err(error) => {
