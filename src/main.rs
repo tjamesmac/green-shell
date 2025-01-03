@@ -43,8 +43,12 @@ fn builtin_cd(args: Vec<String>) -> ShellStatus {
     ShellStatus::Running
 }
 
+fn get_home_dir() -> Result<String, String> {
+    env::var("HOME").map_err(|error| format!("Failed to get $HOME: {}", error))
+}
+
 fn save_history(args: &Vec<String>) -> ShellStatus {
-    let home_dir = match env::var("HOME") {
+    let home_dir = match get_home_dir() {
         Ok(path) => path,
         Err(error) => {
             eprintln!("Failed to get $HOME: {}", error);
