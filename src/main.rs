@@ -113,7 +113,7 @@ impl Shell {
             status = self.execute(args);
             println!("")
         }
-        println!("Exiting green-shell...");
+        println!("Exiting {}...", "green-shell".green());
     }
 
     fn get_current_working_directory(&self) -> std::io::Result<String> {
