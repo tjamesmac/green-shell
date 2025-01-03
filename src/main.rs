@@ -1,12 +1,13 @@
 use std::{
     collections::HashMap,
     env::{self},
+    fs::OpenOptions,
     io::Write,
     path::Path,
     process::{Command, Stdio},
 };
 
-use termcolor::{ColorChoice, StandardStream};
+use owo_colors::OwoColorize;
 
 enum ShellStatus {
     Running,
@@ -42,6 +43,35 @@ fn builtin_cd(args: Vec<String>) -> ShellStatus {
     ShellStatus::Running
 }
 
+fn save_history(args: &Vec<String>) -> ShellStatus {
+    println!("Saving history!");
+    let home_dir = match env::var("HOME") {
+        Ok(path) => path,
+        Err(error) => {
+            eprintln!("Failed to get $HOME: {}", error);
+            return ShellStatus::Exit;
+        }
+    };
+
+    let default_history_path = Path::new(&home_dir).join(".gsh_history");
+
+    let file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(default_history_path);
+
+    match file {
+        Ok(mut f) => {
+            if let Err(e) = writeln!(f, "{}", args.join(" ")) {
+                eprintln!("Couldn't save command to the history file - {}", e)
+            }
+        }
+        _ => eprintln!("oh no!"),
+    }
+
+    ShellStatus::Running
+}
+
 fn builtin_exit(_args: Vec<String>) -> ShellStatus {
     println!("Goodbye! :)");
     ShellStatus::Exit
@@ -65,7 +95,7 @@ impl Shell {
     }
 
     fn run(&self) {
-        println!("Welcome to green-shell");
+        println!("Welcome to {}!", "green-shell".green());
 
         let mut status = ShellStatus::Running;
         while let ShellStatus::Running = status {
@@ -102,7 +132,7 @@ impl Shell {
 
     fn prompt(&self) {
         match self.get_current_working_directory() {
-            Ok(cwd) => print!("{}\n> ", self.get_shortened_path(cwd)),
+            Ok(cwd) => print!("{}\n{} ", self.get_shortened_path(cwd).green(), ">".green()),
             Err(_) => print!("> "),
         }
         std::io::stdout().flush().unwrap()
@@ -148,7 +178,8 @@ impl Shell {
             return ShellStatus::Running;
         }
 
-        // implement save_history
+        save_history(&args);
+
         if let Some(builtin) = self.check_for_builtins(&args[0]) {
             builtin(args)
         } else {
