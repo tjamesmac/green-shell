@@ -32,7 +32,14 @@ impl Builtins {
 
 fn builtin_cd(args: Vec<String>) -> ShellStatus {
     if args.len() < 2 {
-        eprintln!("TODO: implement cd without destination to go back to $HOME")
+        let home_dir = match get_home_dir() {
+            Ok(path) => path,
+            Err(error) => {
+                eprintln!("Failed to get $HOME: {}", error);
+                return ShellStatus::Exit;
+            }
+        };
+        assert!(env::set_current_dir(Path::new(&home_dir)).is_ok());
     } else {
         let (_command, destination_path) = args.split_first().unwrap();
 
