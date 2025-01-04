@@ -50,7 +50,6 @@ fn save_history(args: &Vec<String>) -> ShellStatus {
     ShellStatus::Running
 }
 
-
 fn split_by_whitespace(to_split: String) -> Vec<String> {
     to_split.split_whitespace().map(str::to_string).collect()
 }
@@ -71,6 +70,11 @@ impl Shell {
         aliases.insert(
             String::from("gs"),
             split_by_whitespace(String::from("git status -s -b")),
+        );
+
+        aliases.insert(
+            String::from("gb"),
+            split_by_whitespace(String::from("git branch --show-current")),
         );
 
         Self {
