@@ -30,6 +30,7 @@ fn builtin_cd(args: Vec<String>) -> ShellStatus {
                 return ShellStatus::Exit;
             }
         };
+        // TODO: remove assert because it blows up when incorrect path is given
         assert!(env::set_current_dir(Path::new(&home_dir)).is_ok());
     } else {
         let (_command, destination_path) = args.split_first().unwrap();
